@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda Assist - Daily & Weekly Planner</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #eff6ff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --red-wajib: #ef4444;
+            --red-bg: #fef2f2;
+            --yellow-penting: #f59e0b;
+            --yellow-bg: #fffbeb;
+            --blue-pendukung: #3b82f6;
+            --blue-bg: #eff6ff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-dark); line-height: 1.5; padding: 20px 12px; }
+        .container { max-width: 950px; margin: 0 auto; }
+        header, section { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; background: #dcfce7; color: #166534; font-size: 0.85rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; margin-bottom: 12px; }
+        .pulse { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+        h1 { font-size: 1.8rem; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+        .tagline { color: var(--text-muted); font-size: 1rem; }
+        
+        /* Alert Box 30 Menit */
+        .alert-reminder { background: #fff7ed; border-left: 5px solid #f97316; padding: 14px; border-radius: 6px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .alert-title { font-weight: bold; color: #c2410c; display: flex; align-items: center; gap: 6px; }
+        .alert-time { background: #ffedd5; color: #9a3412; font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; }
+
+        /* View Switcher Tabs */
+        .tab-group { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+        .tab-btn { background: none; border: none; padding: 8px 16px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 6px; }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        /* Priority Cards */
+        .priority-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+        .task-item { padding: 12px 16px; border-radius: 8px; border-left: 5px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .task-item.wajib { background: var(--red-bg); border-left-color: var(--red-wajib); color: #991b1b; }
+        .task-item.penting { background: var(--yellow-bg); border-left-color: var(--yellow-penting); color: #92400e; }
+        .task-item.pendukung { background: var(--blue-bg); border-left-color: var(--blue-pendukung); color: #1e40af; }
+        .badge { font-size: 0.75rem; font-weight: bold; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+        .badge.wajib { background: var(--red-wajib); color: white; }
+        .badge.penting { background: var(--yellow-penting); color: white; }
+        .badge.pendukung { background: var(--blue-pendukung); color: white; }
+
+        /* Time Blocking Table */
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 12px; }
+        .timeline { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .time-slot { display: flex; gap: 12px; padding: 8px 12px; background: #f1f5f9; border-radius: 6px; font-size: 0.9rem; align-items: center; }
+        .time-label { font-weight: bold; width: 90px; color: var(--text-muted); }
+
+        /* Chat Sim & Footer */
+        .chat-box { background: #f1f5f9; border-radius: 8px; padding: 16px; min-height: 160px; max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; }
+        .msg { padding: 10px 14px; border-radius: 8px; max-width: 85%; }
+        .msg.user { background: var(--primary); color: white; align-self: flex-end; }
+        .msg.bot { background: white; color: var(--text-dark); border: 1px solid var(--border); align-self: flex-start; }
+        .sim-btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .btn { background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 0.85rem; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn-outline { background: white; color: var(--text-dark); border: 1px solid var(--border); }
+        footer { text-align: center; border-top: 1px solid var(--border); padding-top: 20px; margin-top: 20px; }
+        .cta-btn { background: #25d366; color: white; font-size: 1rem; padding: 10px 20px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HERO SECTION -->
+        <header>
+            <div class="status-badge"><span class="pulse"></span> Agenda Assist Active</div>
+            <h1>📅 Dashboard Agenda & Prioritas Hari Ini</h1>
+            <p class="tagline">Pengatur waktu, pengingat otomatis, dan manajemen prioritas terpadu.</p>
+        </header>
+
+        <!-- PENGINGAT 30 MENIT -->
+        <div class="alert-reminder">
+            <div class="alert-title">
+                ⏰ PENGINGAT AGENDA (30 Menit Lagi)
+            </div>
+            <div>
+                <strong>Meeting Follow-up Vendor</strong> (14:00 WIB)
+                <span class="alert-time">Segera Berlangsung</span>
+            </div>
+        </div>
+
+        <!-- TAB NAVIGASI TAMPILAN -->
+        <div class="tab-group">
+            <button class="tab-btn active" onclick="switchView('hari')">Hari Ini</button>
+            <button class="tab-btn" onclick="switchView('minggu')">Mingguan</button>
+            <button class="tab-btn" onclick="switchView('bulan')">Bulanan</button>
+        </div>
+
+        <!-- UTAMA: PRIORITAS TUGAS -->
+        <section id="view-content">
+            <h2>🔥 Prioritas Tugas Hari Ini</h2>
+            <div class="priority-list">
+                <div class="task-item wajib">
+                    <div>
+                        <strong>Closing & Follow-up Leads Potensial</strong>
+                        <p style="font-size:0.85rem;">Update data listing & kirim laporan vendor</p>
+                    </div>
+                    <span class="badge wajib">Wajib Selesai</span>
+                </div>
+                <div class="task-item penting">
+                    <div>
+                        <strong>Appointment Inspeksi Properti</strong>
+                        <p style="font-size:0.85rem;">Pertemuan lokasi bersama calon pembeli</p>
+                    </div>
+                    <span class="badge penting">Penting Selesai</span>
+                </div>
+                <div class="task-item pendukung">
+                    <div>
+                        <strong>Rapikan File Spreadsheet di Drive</strong>
+                        <p style="font-size:0.85rem;">Kategorisasi ulang dokumen operasional harian</p>
+                    </div>
+                    <span class="badge pendukung">Tugas Pendukung</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TIME BLOCKING & APPOINTMENT -->
+        <section>
+            <div class="grid-2">
+                <div>
+                    <h2>⏱️ Time Blocking Harian</h2>
+                    <div class="timeline">
+                        <div class="time-slot"><span class="time-label">08:00 - 09:30</span> Prioritas Wajib & Leads</div>
+                        <div class="time-slot"><span class="time-label">10:00 - 11:30</span> Inspection Appointment</div>
+                        <div class="time-slot"><span class="time-label">14:00 - 15:00</span> Meeting Vendor (Drive Sync)</div>
+                    </div>
+                </div>
+                <div>
+                    <h2>🤝 Appointment Hari Ini</h2>
+                    <div class="timeline">
+                        <div class="time-slot" style="background:#fef2f2;"><span class="time-label">10:00 WIB</span> Client Properti - Site Visit</div>
+                        <div class="time-slot" style="background:#eff6ff;"><span class="time-label">14:00 WIB</span> Vendor Report Review via Zoom</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SIMULASI AI ASSISTANT -->
+        <section>
+            <h2>🤖 Asisten Interaktif</h2>
+            <div class="chat-box" id="chatBox">
+                <div class="msg bot">Agenda Assist siap. Notifikasi pengingat 30 menit otomatis disinkronkan ke WhatsApp/Calendar Anda.</div>
+            </div>
+            <div class="sim-btn-group">
+                <button class="btn btn-outline" onclick="runSim(1)">Set Pengingat 30 Mnt</button>
+                <button class="btn btn-outline" onclick="runSim(2)">Tambah Tugas Wajib</button>
+            </div>
+        </section>
+
+        <!-- FOOTER & CTA -->
+        <footer>
+            <a href="https://wa.me/?text=Halo%20Agenda%20Assist,%20saya%20butuh%20pengingat%20agenda" target="_blank" class="cta-btn">💬 Hubungi via WhatsApp</a>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Built with AI · AI Builder Bootcamp Showcase</p>
+        </footer>
+    </div>
+
+    <script>
+        function switchView(type) {
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const content = document.getElementById('view-content');
+            if(type === 'minggu') {
+                content.innerHTML = `<h2>📅 Ringkasan Agenda Mingguan</h2><p style="margin-top:10px; color:var(--text-muted);">Total 12 Appointment & 5 Tugas Wajib Selesai terdaftar minggu ini.</p>`;
+            } else if(type === 'bulan') {
+                content.innerHTML = `<h2>🗓️ Ringkasan Agenda Bulanan</h2><p style="margin-top:10px; color:var(--text-muted);">Proyeksi jadwal penuh terintegrasi dengan Google Calendar sepanjang bulan.</p>`;
+            } else {
+                location.reload();
+            }
+        }
+
+        function runSim(id) {
+            const box = document.getElementById("chatBox");
+            if(id === 1) {
+                box.innerHTML += `<div class="msg user">Kirim pengingat 30 menit sebelum appointment berikutnya.</div>`;
+                box.innerHTML += `<div class="msg bot">✅ Pengingat diaktifkan! Notifikasi akan muncul 30 menit sebelum pukul 14:00 WIB.</div>`;
+            } else {
+                box.innerHTML += `<div class="msg user">Tambah tugas wajib baru.</div>`;
+                box.innerHTML += `<div class="msg bot">🔴 Tugas ditambahkan ke kategori 'WAJIB SELESAI' dan disinkronkan ke Drive.</div>`;
+            }
+            box.scrollTop = box.scrollHeight;
+        }
+    </script>
+</body>
+</html>
